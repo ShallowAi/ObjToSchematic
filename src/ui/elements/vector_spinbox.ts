@@ -16,7 +16,7 @@ export class VectorSpinboxElement extends LabelledElement<Vector3> {
     private _dragging: EAxis;
     private _lastClientX: number;
 
-    public constructor(label: string, decimals: number, value: Vector3) {
+    public constructor(label: string, _: number, value: Vector3) {
         super(label);
         this._value = value;
         this._mouseover = EAxis.None;

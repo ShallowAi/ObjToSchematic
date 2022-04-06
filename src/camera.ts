@@ -100,7 +100,7 @@ export class ArcballCamera {
         }
     }
     
-    public onMouseUp(e: MouseEvent) {
+    public onMouseUp(_: MouseEvent) {
         this.isUserRotating = false;
         this.isUserTranslating = false;
     }
@@ -174,6 +174,3 @@ export class ArcballCamera {
     }
     */
 }
-
-
-module.exports.ArcballCamera = ArcballCamera;

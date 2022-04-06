@@ -7,7 +7,7 @@ interface IBlockAssigner {
 }
 
 export class BasicBlockAssigner implements IBlockAssigner {
-    assignBlock(voxelColour: RGB, voxelPosition: Vector3, colourSpace: ColourSpace): BlockInfo {
+    assignBlock(voxelColour: RGB, _: Vector3, colourSpace: ColourSpace): BlockInfo {
         return BlockAtlas.Get.getBlock(voxelColour, colourSpace);
     }
 }

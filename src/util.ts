@@ -288,7 +288,7 @@ export class Warnable {
     }
 }
 
-export const BASE_DIR = path.join(__dirname, '/../../');
+export const BASE_DIR = path.join(__dirname, '/../');
 export const RESOURCES_DIR = path.join(BASE_DIR, './res/');
 export const ATLASES_DIR = path.join(RESOURCES_DIR, './atlases');
 export const PALETTES_DIR = path.join(RESOURCES_DIR, './palettes/');

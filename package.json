@@ -2,21 +2,14 @@
   "name": "objtoschematic",
   "version": "0.5.0",
   "description": "A tool to convert .obj files into voxels and then into Minecraft Schematic files",
-  "main": "./dist/src/main.js",
+  "main": "./dist/main.js",
   "engines": {
     "node": ">=14.0.0"
   },
   "scripts": {
-    "lint": "eslint --fix ./src/**/*.ts && eslint --fix ./tools/**/*.ts",
-    "debug": "tsc && electron ./dist/src/main.js --enable-logging",
-    "build": "npm run lint && tsc",
-    "fast-build": "tsc",
-    "test": "jest --config jestconfig.json",
-    "start": "npm run build && electron ./dist/src/main.js --enable-logging",
-    "atlas": "node ./dist/tools/build-atlas.js",
-    "palette": "node ./dist/tools/build-palette.js",
-    "headless": "node ./dist/tools/headless.js",
-    "package:win64": "electron-packager . ObjToSchematic --platform=win32 --arch=x64 --app-version=0.5.0"
+    "build": "webpack --config webpack.config.js",
+    "prestart": "npm run build",
+    "start": "electron ./dist/main.js"
   },
   "repository": {
     "type": "git",
@@ -29,6 +22,9 @@
   },
   "homepage": "https://github.com/LucasDower/ObjToSchematic#readme",
   "devDependencies": {
+    "@babel/core": "^7.17.8",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-es2015": "^7.0.0-beta.53",
     "@types/jest": "^27.4.1",
     "@types/jquery": "^3.5.6",
     "@types/obj-file-parser": "^0.5.0",
@@ -37,18 +33,25 @@
     "@typescript-eslint/eslint-plugin": "^5.9.1",
     "@typescript-eslint/parser": "^5.9.1",
     "adm-zip": "^0.5.9",
+    "babel-loader": "^8.2.4",
     "chalk": "^4.1.2",
     "copy-dir": "^1.3.0",
     "electron": "^13.6.6",
     "electron-packager": "^15.2.0",
     "eslint": "^8.7.0",
     "eslint-config-google": "^0.14.0",
+    "html-webpack-plugin": "^5.5.0",
     "images": "^3.2.3",
     "jest": "^27.5.1",
     "prompt": "^1.2.1",
+    "standard": "^16.0.4",
+    "standard-loader": "^7.0.0",
     "ts-jest": "^27.1.3",
+    "ts-loader": "^9.2.8",
     "ts-node": "^10.1.0",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "webpack": "^5.71.0",
+    "webpack-cli": "^4.9.2"
   },
   "dependencies": {
     "bvh": "^0.5.0",
