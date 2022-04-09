@@ -1,18 +1,15 @@
 import { UI } from './ui/layout';
 import { Litematic, Schematic } from './schematic';
 import { Renderer } from './renderer';
-import { Mesh } from './mesh';
-import { ObjImporter } from './importers/obj_importer';
-import { ASSERT, ColourSpace, CustomError, CustomWarning, LOG, LOG_ERROR, LOG_WARN } from './util';
+import { ColourSpace, LOG } from './util';
 
 import { remote } from 'electron';
-import { VoxelMesh, VoxelMeshParams } from './voxel_mesh';
-import { BlockMesh, BlockMeshParams } from './block_mesh';
 import { TextureFiltering } from './texture';
-import { RayVoxeliser } from './voxelisers/ray-voxeliser';
-import { IVoxeliser } from './voxelisers/base-voxeliser';
-import { NormalCorrectedRayVoxeliser } from './voxelisers/normal-corrected-ray-voxeliser';
-import { BVHRayVoxeliser } from './voxelisers/bvh-ray-voxeliser';
+
+import { Exporters, FromWorkerMessage, ToWorkerMessage, Voxelisers } from './child';
+
+import { fork, ChildProcess } from 'child_process';
+import path from 'path';
 
 /* eslint-disable */
 export enum ActionReturnType {
@@ -38,201 +35,167 @@ export enum Action {
 }
 /* eslint-enable */
 
-const ReturnMessages = new Map<Action, { onSuccess: string, onFailure: string }>();
-ReturnMessages.set(Action.Import,   { onSuccess: 'Loaded mesh successfully',        onFailure: 'Failed to load mesh' });
-ReturnMessages.set(Action.Simplify, { onSuccess: 'Simplified mesh successfully',    onFailure: 'Failed to simplify mesh' });
-ReturnMessages.set(Action.Voxelise, { onSuccess: 'Voxelised mesh successfully',     onFailure: 'Failed to voxelise mesh' });
-ReturnMessages.set(Action.Palette,  { onSuccess: 'Assigned blocks successfully',    onFailure: 'Failed to assign blocks' });
-ReturnMessages.set(Action.Export,   { onSuccess: 'Exported structure successfully', onFailure: 'Failed to export structure' });
-
 export class AppContext {
-    private _loadedMesh?: Mesh;
-    private _loadedVoxelMesh?: VoxelMesh;
-    private _loadedBlockMesh?: BlockMesh;
-    private _warnings: string[];
-    private _ui: UI;
+    private _worker: ChildProcess;
 
-    private _actionMap = new Map<Action, {
-        action: () => void;
-        onFailure?: () => void
-    }>();
+    private static _instance: AppContext;
+    public static get Get() {
+        return this._instance || (this._instance = new this());
+    }
 
-    public constructor() {
+    private constructor() {
         const gl = (<HTMLCanvasElement>document.getElementById('canvas')).getContext('webgl');
         if (!gl) {
             throw Error('Could not load WebGL context');
         }
 
-        this._warnings = [];
-        this._actionMap.set(Action.Import, {
-            action: () => {
-                return this._import();
-            },
-            onFailure: () => {
-                this._loadedMesh = undefined;
-            },
-        });
-        this._actionMap.set(Action.Simplify, {
-            action: () => {
-                return this._simplify();
-            },
-        });
-        this._actionMap.set(Action.Voxelise, {
-            action: () => {
-                return this._voxelise();
-            },
-            onFailure: () => {
-                this._loadedVoxelMesh = undefined;
-            },
-        });
-        this._actionMap.set(Action.Palette, {
-            action: () => {
-                return this._palette();
-            },
-            onFailure: () => {
-                this._loadedBlockMesh = undefined;
-            },
-        });
-        this._actionMap.set(Action.Export, {
-            action: () => {
-                return this._export();
-            },
-        });
+        UI.Get.build();
+        UI.Get.registerEvents();
+        UI.Get.disable(Action.Simplify);
 
-        this._ui = new UI(this);
-        this._ui.build();
-        this._ui.registerEvents();
-
-        // this._ui.disablePost(Action.Import);
-        this._ui.disable(Action.Simplify);
+        LOG('Creating worker...');
+        const workerPath = path.join(__dirname, './proxy.js');
+        this._worker = fork(workerPath);
+        this._worker.on('message', this._handleWorkerMessage);
 
         Renderer.Get.toggleIsGridEnabled();
     }
 
     public do(action: Action) {
-        this._ui.disable(action + 1);
-        this._warnings = [];
-        const groupName = this._ui.uiOrder[action];
         LOG(`Doing ${action}`);
-        this._ui.cacheValues(action);
-        const delegate = this._actionMap.get(action)!;
-        try {
-            delegate.action();
-        } catch (err: any) {
-            LOG_ERROR(err);
-            if (err instanceof CustomError) {
-                this._ui.layoutDull[groupName].output.setMessage(err.message, ActionReturnType.Failure);
-            } else if (err instanceof CustomWarning) {
-                this._ui.layoutDull[groupName].output.setMessage(err.message, ActionReturnType.Warning);
-            } else {
-                this._ui.layoutDull[groupName].output.setMessage(ReturnMessages.get(action)!.onFailure, ActionReturnType.Failure);
+        const groupName = UI.Get.uiOrder[action];
+
+        UI.Get.disable(action + 1);
+        UI.Get.cacheValues(action);
+
+        const workerMessage = this._getWorkerMessage(action);
+        if (workerMessage) {
+            this._worker.send(workerMessage);
+        }
+
+        UI.Get.layoutDull[groupName].submitButton.startLoading('Loading...');
+    }
+
+    private _getWorkerMessage(action: Action): ToWorkerMessage | void {
+        switch (action) {
+            case Action.Import: {
+                const uiElements = UI.Get.layout.import.elements;
+                return {
+                    action: 'Import',
+                    params: {
+                        filepath: uiElements.input.getCachedValue(),
+                    },
+                };
             }
-            if (delegate.onFailure) {
-                delegate.onFailure();
+            case Action.Voxelise: {
+                const uiElements = UI.Get.layout.build.elements;
+                return {
+                    action: 'Voxelise',
+                    params: {
+                        voxeliser: uiElements.voxeliser.getCachedValue() as Voxelisers,
+                        params: {
+                            desiredHeight: uiElements.height.getCachedValue() as number,
+                            useMultisampleColouring: uiElements.multisampleColouring.getCachedValue() === 'on',
+                            textureFiltering: uiElements.textureFiltering.getCachedValue() === 'linear' ? TextureFiltering.Linear : TextureFiltering.Nearest,
+                        },
+                    },
+                };
             }
-            return;
+            case Action.Palette: {
+                const uiElements = UI.Get.layout.palette.elements;
+                return {
+                    action: 'Palette',
+                    params: {
+                        params: {
+                            textureAtlas: uiElements.textureAtlas.getCachedValue(),
+                            blockPalette: uiElements.blockPalette.getCachedValue(),
+                            ditheringEnabled: uiElements.dithering.getCachedValue() === 'on',
+                            colourSpace: uiElements.colourSpace.getCachedValue() as ColourSpace,
+                        },
+                    },
+                };
+            }
+            case Action.Export: {
+                const uiElements = UI.Get.layout.export.elements;
+
+                const exportFormat = uiElements.export.getCachedValue() as Exporters;
+                const exporter = (exportFormat === 'schematic') ? new Schematic() : new Litematic();
+
+                const filepath = remote.dialog.showSaveDialogSync({
+                    title: 'Save structure',
+                    buttonLabel: 'Save',
+                    filters: [exporter.getFormatFilter()],
+                });
+
+                if (filepath) {
+                    return {
+                        action: 'Export',
+                        params: {
+                            filepath: filepath,
+                            exporter: exportFormat as Exporters,
+                        },
+                    };
+                }
+            }
         }
+    }
 
-        const successMessage = ReturnMessages.get(action)!.onSuccess;
-        if (this._warnings.length !== 0) {
-            const allWarnings = this._warnings.join('<br>');
-            this._ui.layoutDull[groupName].output.setMessage(successMessage + `, with ${this._warnings.length} warning(s):` + '<br><b>' + allWarnings + '</b>', ActionReturnType.Warning);
-        } else {
-            this._ui.layoutDull[groupName].output.setMessage(successMessage, ActionReturnType.Success);
+    public sendWorker(message: ToWorkerMessage) {
+        this._worker.send(message);
+    }
+
+    private _handleWorkerMessage(message: FromWorkerMessage) {
+        switch (message.action) {
+            case 'Import': {
+                UI.Get.layout.import.output.setMessage(`Imported successfully with ${message.result.numTriangles} triangles`, ActionReturnType.Success);
+                UI.Get.layout.import.submitButton.stopLoading();
+                
+                const renderMessage: ToWorkerMessage = { action: 'RenderMesh' };
+                AppContext.Get.sendWorker(renderMessage);
+                UI.Get.layout.import.submitButton.startLoading('Rendering...');
+                break;
+            }
+            case 'RenderMesh': {
+                Renderer.Get.parseRawMeshData(message.result);
+                UI.Get.layout.import.submitButton.stopLoading();
+                UI.Get.enable(Action.Voxelise);
+                break;
+            }
+            case 'Voxelise': {
+                const dim = message.result.dimensions;
+                UI.Get.layout.build.output.setMessage(`Voxelised successfully <code>${dim.x}x${dim.y}x${dim.z}</code>`, ActionReturnType.Success);
+                UI.Get.layout.build.submitButton.stopLoading();
+
+                const renderMessage: ToWorkerMessage = {
+                    action: 'RenderVoxelMesh',
+                    params: {
+                        ambientOcclusionEnabled: UI.Get.layout.build.elements.ambientOcclusion.getCachedValue() === 'on',
+                    },
+                };
+                AppContext.Get.sendWorker(renderMessage);
+                UI.Get.layout.build.submitButton.startLoading('Rendering...');
+                break;
+            }
+            case 'RenderVoxelMesh': {
+                Renderer.Get.parseRawVoxelMeshData(message.result);
+                UI.Get.layout.build.submitButton.stopLoading();
+                UI.Get.enable(Action.Palette);
+                break;
+            }
+            case 'Palette': {
+                break;
+            }
+            case 'RenderBlockMesh': {
+                break;
+            }
+            case 'Export': {
+                break;
+            }
         }
-
-        LOG(`Finished ${action}`);
-        this._ui.enable(action + 1);
-    }
-
-    private _import() {
-        const uiElements = this._ui.layout.import.elements;
-        const filePath = uiElements.input.getCachedValue();
-
-        const importer = new ObjImporter();
-        importer.parseFile(filePath);
-        this._loadedMesh = importer.toMesh();
-        this._loadedMesh.processMesh();
-        Renderer.Get.useMesh(this._loadedMesh);
-
-        this._warnings = this._loadedMesh.getWarnings();
-    }
-
-    private _simplify() {
-        ASSERT(false);
-    }
-
-    private _voxelise() {
-        ASSERT(this._loadedMesh);
-        
-        const uiElements = this._ui.layout.build.elements;
-        const voxelMeshParams: VoxelMeshParams = {
-            desiredHeight: uiElements.height.getCachedValue() as number,
-            useMultisampleColouring: uiElements.multisampleColouring.getCachedValue() === 'on',
-            textureFiltering: uiElements.textureFiltering.getCachedValue() === 'linear' ? TextureFiltering.Linear : TextureFiltering.Nearest,
-            
-        };
-        const ambientOcclusionEnabled = uiElements.ambientOcclusion.getCachedValue() === 'on';
-
-        const voxeliserID = uiElements.voxeliser.getCachedValue();
-        let voxeliser: IVoxeliser;
-        if (voxeliserID === 'raybased') {
-            voxeliser = new RayVoxeliser();
-        } else if (voxeliserID === 'bvhraybased') {
-            voxeliser = new BVHRayVoxeliser();
-        } else {
-            ASSERT(voxeliserID === 'normalcorrectedraybased');
-            voxeliser = new NormalCorrectedRayVoxeliser();
-        }
-        
-        this._loadedVoxelMesh = voxeliser.voxelise(this._loadedMesh, voxelMeshParams);
-        Renderer.Get.useVoxelMesh(this._loadedVoxelMesh, ambientOcclusionEnabled);
-    }
-
-    private _palette() {
-        ASSERT(this._loadedVoxelMesh);
-
-        const uiElements = this._ui.layout.palette.elements;
-        const blockMeshParams: BlockMeshParams = {
-            textureAtlas: uiElements.textureAtlas.getCachedValue(),
-            blockPalette: uiElements.blockPalette.getCachedValue(),
-            ditheringEnabled: uiElements.dithering.getCachedValue() === 'on',
-            colourSpace: uiElements.colourSpace.getCachedValue() === 'rgb' ? ColourSpace.RGB : ColourSpace.LAB,
-        };
-
-        this._loadedBlockMesh = BlockMesh.createFromVoxelMesh(this._loadedVoxelMesh, blockMeshParams);
-        Renderer.Get.useBlockMesh(this._loadedBlockMesh);
-    }
-
-    private _export() {
-        const exportFormat = this._ui.layout.export.elements.export.getCachedValue() as string;
-        const exporter = (exportFormat === 'schematic') ? new Schematic() : new Litematic();
-
-        const filePath = remote.dialog.showSaveDialogSync({
-            title: 'Save structure',
-            buttonLabel: 'Save',
-            filters: [exporter.getFormatFilter()],
-        });
-
-        ASSERT(this._loadedBlockMesh);
-        if (filePath) {
-            exporter.export(this._loadedBlockMesh, filePath);
-        }
-
-        this._warnings = exporter.getWarnings();
     }
 
     public draw() {
         Renderer.Get.update();
         Renderer.Get.draw();
-    }
-
-    public getLoadedMesh() {
-        return this._loadedMesh;
-    }
-
-    public addWarning(warning: string) {
-        LOG_WARN(warning);
-        this._warnings.push(warning);
     }
 }

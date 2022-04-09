@@ -1,5 +1,5 @@
 import { BaseUIElement } from './base';
-import { ASSERT } from '../../util';
+import { ASSERT, LOG } from '../../util';
 
 export class ButtonElement extends BaseUIElement<any> {
     private _onClick: () => void;
@@ -38,5 +38,23 @@ export class ButtonElement extends BaseUIElement<any> {
         } else {
             element.classList.add('button-disabled');
         }
+    }
+
+    public startLoading(label: string) {
+        const element = document.getElementById(this._id) as HTMLDivElement;
+        ASSERT(element !== null);
+
+        element.innerHTML = label;
+        element.classList.add('button-loading');
+        this.setEnabled(false);
+    }
+    
+    public stopLoading() {
+        const element = document.getElementById(this._id) as HTMLDivElement;
+        ASSERT(element !== null);
+        
+        element.innerHTML = this._label;
+        element.classList.remove('button-loading');
+        this.setEnabled(true);
     }
 }

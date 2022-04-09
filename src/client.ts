@@ -28,9 +28,8 @@ addDocumentEvent('mousemove', (e) => {
 
 
 // Begin draw loop
-const context = new AppContext();
 function render() {
-    context.draw();
+    AppContext.Get.draw();
     requestAnimationFrame(render);
 }
 requestAnimationFrame(render);

@@ -118,37 +118,37 @@ export class ObjImporter extends IImporter {
                 for (const vertex of vertices) {
                     const vertexData = vertex.split('/');
                     switch (vertexData.length) {
-                    case 1: {
-                        const index = parseInt(vertexData[0]);
-                        points.push({
-                            positionIndex: index,
-                            texcoordIndex: index,
-                            normalIndex: index,
-                        });
-                        break;
-                    }
-                    case 2: {
-                        const positionIndex = parseInt(vertexData[0]);
-                        const texcoordIndex = parseInt(vertexData[1]);
-                        points.push({
-                            positionIndex: positionIndex,
-                            texcoordIndex: texcoordIndex,
-                        });
-                        break;
-                    }
-                    case 3: {
-                        const positionIndex = parseInt(vertexData[0]);
-                        const texcoordIndex = parseInt(vertexData[1]);
-                        const normalIndex = parseInt(vertexData[2]);
-                        points.push({
-                            positionIndex: positionIndex,
-                            texcoordIndex: texcoordIndex,
-                            normalIndex: normalIndex,
-                        });
-                        break;
-                    }
-                    default:
-                        throw new CustomError(`Face data has unexpected number of vertex data: ${vertexData.length}`);
+                        case 1: {
+                            const index = parseInt(vertexData[0]);
+                            points.push({
+                                positionIndex: index,
+                                texcoordIndex: index,
+                                normalIndex: index,
+                            });
+                            break;
+                        }
+                        case 2: {
+                            const positionIndex = parseInt(vertexData[0]);
+                            const texcoordIndex = parseInt(vertexData[1]);
+                            points.push({
+                                positionIndex: positionIndex,
+                                texcoordIndex: texcoordIndex,
+                            });
+                            break;
+                        }
+                        case 3: {
+                            const positionIndex = parseInt(vertexData[0]);
+                            const texcoordIndex = parseInt(vertexData[1]);
+                            const normalIndex = parseInt(vertexData[2]);
+                            points.push({
+                                positionIndex: positionIndex,
+                                texcoordIndex: texcoordIndex,
+                                normalIndex: normalIndex,
+                            });
+                            break;
+                        }
+                        default:
+                            throw new CustomError(`Face data has unexpected number of vertex data: ${vertexData.length}`);
                     }
                 }
 

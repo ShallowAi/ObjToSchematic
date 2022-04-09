@@ -23,10 +23,7 @@ export class UV {
 }
 
 /* eslint-disable */
-export enum ColourSpace {
-    RGB,
-    LAB
-}
+export type ColourSpace = 'rgb' | 'lab';
 /* eslint-enable */
 
 export class RGB {
@@ -64,14 +61,14 @@ export class RGB {
     }
 
     public static distance(a: RGB, b: RGB, colourSpace: ColourSpace): number {
-        if (colourSpace === ColourSpace.LAB) {
+        if (colourSpace === 'lab') {
             const aLAB = convert.rgb.lab(a.r * 255, a.g * 255, a.b * 255);
             const bLAB = convert.rgb.lab(b.r * 255, b.g * 255, b.b * 255);
             const _a = Vector3.fromArray(aLAB);
             const _b = Vector3.fromArray(bLAB);
             return _a.sub(_b).magnitude();
         } else {
-            ASSERT(colourSpace === ColourSpace.RGB);
+            ASSERT(colourSpace === 'rgb');
             const _a = a.toVector3();
             const _b = b.toVector3();
             return _a.sub(_b).magnitude();

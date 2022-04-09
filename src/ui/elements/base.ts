@@ -17,7 +17,7 @@ export abstract class BaseUIElement<Type> {
         this._isEnabled = isEnabled;
         this._onEnabledChanged();
     }
-
+    
     public getCachedValue(): Type {
         ASSERT(this._cachedValue !== undefined, 'Attempting to access value before cached');
         return this._cachedValue as Type;

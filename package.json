@@ -54,6 +54,7 @@
     "bvh": "^0.5.0",
     "bvh-tree": "^1.0.1",
     "color-convert": "^2.0.1",
+    "fork-pool": "^0.0.2",
     "jpeg-js": "^0.4.3",
     "pngjs": "^6.0.0",
     "prismarine-nbt": "^1.6.0",

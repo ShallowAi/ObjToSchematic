@@ -13,7 +13,7 @@ export interface BlockMeshParams {
     textureAtlas: string,
     blockPalette: string,
     ditheringEnabled: boolean,
-    colourSpace: ColourSpace,
+    colourSpace: 'rgb' | 'lab',
 }
 
 export class BlockMesh {

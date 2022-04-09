@@ -75,6 +75,16 @@ export class RenderBuffer {
     private _compiled: boolean;
     private _needsCompiling: boolean;
 
+    public static from(other: RenderBuffer): RenderBuffer {
+        const buffer = new RenderBuffer([]);
+        buffer._buffer = other._buffer;
+        buffer._attributes = other._attributes;
+        buffer._maxIndex = other._maxIndex;
+        buffer._compiled = other._compiled;
+        buffer._needsCompiling = other._needsCompiling;
+        return buffer;
+    }
+
     public constructor(attributes: Array<Attribute>) {
         this._attributes = {};
         for (const attr of attributes) {

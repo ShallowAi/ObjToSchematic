@@ -28,7 +28,7 @@ void async function main() {
             textureAtlas: headlessConfig.palette.blockMeshParams.textureAtlas,
             blockPalette: headlessConfig.palette.blockMeshParams.blockPalette,
             ditheringEnabled: headlessConfig.palette.blockMeshParams.ditheringEnabled,
-            colourSpace: headlessConfig.palette.blockMeshParams.colourSpace === 'rgb' ? ColourSpace.RGB : ColourSpace.LAB,
+            colourSpace: headlessConfig.palette.blockMeshParams.colourSpace as ColourSpace,
         },
     });
     _export(blockMesh, {

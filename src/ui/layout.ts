@@ -38,7 +38,7 @@ export class UI {
             },
             elementsOrder: ['input'],
             submitButton: new ButtonElement('Load mesh', () => {
-                this._appContext.do(Action.Import);
+                AppContext.Get.do(Action.Import);
             }),
             output: new OutputElement(),
         },
@@ -49,7 +49,7 @@ export class UI {
             },
             elementsOrder: ['ratio'],
             submitButton: new ButtonElement('Simplify mesh', () => {
-                this._appContext.do(Action.Simplify);
+                AppContext.Get.do(Action.Simplify);
             }),
             output: new OutputElement(),
         },
@@ -77,7 +77,7 @@ export class UI {
             },
             elementsOrder: ['height', 'voxeliser', 'ambientOcclusion', 'multisampleColouring', 'textureFiltering'],
             submitButton: new ButtonElement('Voxelise mesh', () => {
-                this._appContext.do(Action.Voxelise);
+                AppContext.Get.do(Action.Voxelise);
             }),
             output: new OutputElement(),
         },
@@ -97,7 +97,7 @@ export class UI {
             },
             elementsOrder: ['textureAtlas', 'blockPalette', 'dithering', 'colourSpace'],
             submitButton: new ButtonElement('Assign blocks', () => {
-                this._appContext.do(Action.Palette);
+                AppContext.Get.do(Action.Palette);
             }),
             output: new OutputElement(),
         },
@@ -111,7 +111,7 @@ export class UI {
             },
             elementsOrder: ['export'],
             submitButton: new ButtonElement('Export structure', () => {
-                this._appContext.do(Action.Export);
+                AppContext.Get.do(Action.Export);
             }),
             output: new OutputElement(),
         },
@@ -230,10 +230,12 @@ export class UI {
     private _toolbarLeftDull: { [key: string]: ToolbarGroup } = this._toolbarLeft.groups;
     private _toolbarRightDull: { [key: string]: ToolbarGroup } = this._toolbarRight.groups;
 
-    private _appContext: AppContext;
+    private static _instance: UI;
+    public static get Get() {
+        return this._instance || (this._instance = new this());
+    }
 
-    constructor(appContext: AppContext) {
-        this._appContext = appContext;
+    private constructor() {
     }
 
     public build() {

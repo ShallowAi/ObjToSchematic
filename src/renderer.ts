@@ -11,6 +11,7 @@ import { BlockMesh } from './block_mesh';
 
 import * as twgl from 'twgl.js';
 import { EAppEvent, EventManager } from './event';
+import { RenderVoxelMeshOutput } from './child';
 
 /* eslint-disable */
 export enum MeshType {
@@ -89,15 +90,15 @@ export class Renderer {
         this._setupScene();
 
         switch (this._meshToUse) {
-        case MeshType.TriangleMesh:
-            this._drawMesh();
-            break;
-        case MeshType.VoxelMesh:
-            this._drawVoxelMesh();
-            break;
-        case MeshType.BlockMesh:
-            this._drawBlockMesh();
-            break;
+            case MeshType.TriangleMesh:
+                this._drawMesh();
+                break;
+            case MeshType.VoxelMesh:
+                this._drawVoxelMesh();
+                break;
+            case MeshType.BlockMesh:
+                this._drawBlockMesh();
+                break;
         };
 
         this._drawDebug();
@@ -127,6 +128,78 @@ export class Renderer {
         const isEnabled = !this._isGridComponentEnabled[EDebugBufferComponents.Dev];
         this._isGridComponentEnabled[EDebugBufferComponents.Dev] = isEnabled;
         EventManager.Get.broadcast(EAppEvent.onDevViewEnabledChanged, isEnabled);
+    }
+
+    public parseRawVoxelMeshData(params: RenderVoxelMeshOutput) {
+        EventManager.Get.broadcast(EAppEvent.onModelAvailableChanged, MeshType.VoxelMesh, false);
+        EventManager.Get.broadcast(EAppEvent.onModelAvailableChanged, MeshType.BlockMesh, false);
+
+        const dullRenderBuffer: RenderBuffer = JSON.parse(params.rawBuffer);
+        this._voxelBuffer = RenderBuffer.from(dullRenderBuffer);
+        this._voxelSize = params.voxelSize;
+        
+        const dimensions = params.dimensions;
+        this._gridOffset = new Vector3(
+            dimensions.x % 2 === 0 ? 0 : -0.5,
+            dimensions.y % 2 === 0 ? 0 : -0.5,
+            dimensions.z % 2 === 0 ? 0 : -0.5,
+        );
+
+        this._debugBuffers[MeshType.VoxelMesh][EDebugBufferComponents.Grid] = DebugGeometryTemplates.grid(true, true, true, params.voxelSize);
+        // this._debugBuffers[MeshType.VoxelMesh][EDebugBufferComponents.Wireframe] = DebugGeometryTemplates.voxelMeshWireframe(voxelMesh, new RGB(0.18, 0.52, 0.89));
+        // this._debugBuffers[MeshType.TriangleMesh][EDebugBufferComponents.Dev] = voxelMesh.debugBuffer;
+        
+        this._modelsAvailable = 2;
+        this.setModelToUse(MeshType.VoxelMesh);
+
+        EventManager.Get.broadcast(EAppEvent.onModelAvailableChanged, MeshType.VoxelMesh, true);
+    }
+
+    public parseRawMeshData(rawData: string) {
+        EventManager.Get.broadcast(EAppEvent.onModelAvailableChanged, MeshType.TriangleMesh, false);
+        EventManager.Get.broadcast(EAppEvent.onModelAvailableChanged, MeshType.VoxelMesh, false);
+        EventManager.Get.broadcast(EAppEvent.onModelAvailableChanged, MeshType.BlockMesh, false);
+
+        const materialBuffers: Array<{
+            buffer: RenderBuffer,
+            material: (SolidMaterial | (TexturedMaterial & { texturePath: string }))
+        }> = JSON.parse(rawData);
+
+        this._materialBuffers = [];
+        for (const materialBuffer of materialBuffers) {
+            if (materialBuffer.material.type === MaterialType.solid) {
+                const colour = materialBuffer.material.colour;
+                this._materialBuffers.push({
+                    buffer: RenderBuffer.from(materialBuffer.buffer),
+                    material: {
+                        type: MaterialType.solid,
+                        colour: new RGB(colour.r, colour.g, colour.b),
+                    },
+                });
+            } else {
+                this._materialBuffers.push({
+                    buffer: RenderBuffer.from(materialBuffer.buffer),
+                    material: {
+                        type: MaterialType.textured,
+                        path: materialBuffer.material.texturePath,
+                        texture: twgl.createTexture(this._gl, {
+                            src: materialBuffer.material.texturePath,
+                            mag: this._gl.LINEAR,
+                        }),
+                    },
+                });
+            }
+        }
+
+        this._debugBuffers[MeshType.TriangleMesh][EDebugBufferComponents.Grid] = DebugGeometryTemplates.grid(true, true, false, 0.25);
+        // this._debugBuffers[MeshType.TriangleMesh][EDebugBufferComponents.Wireframe] = DebugGeometryTemplates.meshWireframe(mesh, new RGB(0.18, 0.52, 0.89));
+        // this._debugBuffers[MeshType.TriangleMesh][EDebugBufferComponents.Normals] = DebugGeometryTemplates.meshNormals(mesh, new RGB(0.89, 0.52, 0.18));
+        delete this._debugBuffers[MeshType.TriangleMesh][EDebugBufferComponents.Dev];
+
+        this._modelsAvailable = 1;
+        this.setModelToUse(MeshType.TriangleMesh);
+
+        EventManager.Get.broadcast(EAppEvent.onModelAvailableChanged, MeshType.TriangleMesh, true);
     }
 
     public useMesh(mesh: Mesh) {
