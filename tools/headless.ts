@@ -10,7 +10,7 @@ import { RayVoxeliser } from '../src/voxelisers/ray-voxeliser';
 import { NormalCorrectedRayVoxeliser } from '../src/voxelisers/normal-corrected-ray-voxeliser';
 import { TextureFiltering } from '../src/texture';
 import { ColourSpace } from '../src/util';
-import { log, LogStyle } from './logging';
+import { log } from './logging';
 import { headlessConfig } from './headless-config';
 
 void async function main() {
@@ -37,7 +37,7 @@ void async function main() {
         absoluteFilePathSave: headlessConfig.export.absoluteFilePathSave,
         exporter: headlessConfig.export.exporter === 'schematic' ? new Schematic() : new Litematic(),
     });
-    log(LogStyle.Success, 'Finished!');
+    log('ok', 'Finished!');
 }();
 
 interface ImportParams {
@@ -60,7 +60,7 @@ interface ExportParams {
 
 // TODO: Log status messages
 function _import(params: ImportParams): Mesh {
-    log(LogStyle.Info, 'Importing...');
+    log('info', 'Importing...');
     const importer = new ObjImporter();
     importer.parseFile(params.absoluteFilePathLoad);
     const mesh = importer.toMesh();
@@ -70,19 +70,19 @@ function _import(params: ImportParams): Mesh {
 
 // TODO: Log status messages
 function _voxelise(mesh: Mesh, params: VoxeliseParams): VoxelMesh {
-    log(LogStyle.Info, 'Voxelising...');
+    log('info', 'Voxelising...');
     const voxeliser: IVoxeliser = params.voxeliser;
     return voxeliser.voxelise(mesh, params.voxelMeshParams);
 }
 
 // TODO: Log status messages
 function _palette(voxelMesh: VoxelMesh, params: PaletteParams): BlockMesh {
-    log(LogStyle.Info, 'Assigning blocks...');
+    log('info', 'Assigning blocks...');
     return BlockMesh.createFromVoxelMesh(voxelMesh, params.blockMeshParams);
 }
 
 // TODO: Log status messages
 function _export(blockMesh: BlockMesh, params: ExportParams) {
-    log(LogStyle.Info, 'Exporting...');
+    log('info', 'Exporting...');
     params.exporter.export(blockMesh, params.absoluteFilePathSave);
 }

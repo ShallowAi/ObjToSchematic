@@ -8,4 +8,5 @@ ObjToSchematic-win32-x64
 /dist
 /tools/blocks
 /tools/models
+/logs
 notes.txt

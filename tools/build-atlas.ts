@@ -1,5 +1,5 @@
-import { ATLASES_DIR, RGB, TOOLS_DIR, UV } from '../src/util';
-import { log, LogStyle } from './logging';
+import { ATLASES_DIR, LOGS_DIR, RGB, TOOLS_DIR, UV } from '../src/util';
+import { log } from './logging';
 import { isDirSetup, ASSERT, getAverageColour, getPermission, getMinecraftDir } from './misc';
 
 import fs from 'fs';
@@ -12,42 +12,64 @@ const AdmZip = require('adm-zip');
 const copydir = require('copy-dir');
 
 void async function main() {
-    await getPermission();
-    checkMinecraftInstallation();
-    cleanupDirectories();
-    await fetchModelsAndTextures();
-    await buildAtlas();
-    cleanupDirectories();
+    try {
+        cleanTempDirectories();
+        await getPermission();
+        checkMinecraftInstallation();
+        await fetchModelsAndTextures();
+        await buildAtlas();
+        cleanTempDirectories();
+    } catch (error: any) {
+        log('fail', 'Something went wrong');
+        if (error instanceof Error) {
+            const logDir = path.join(LOGS_DIR, `./atlas-${Date.now()}.log`);
+            fs.writeFileSync(logDir, `${error.name}\n${error.message}\n${error.stack}`);
+            log('fail', `For details check ${logDir}`);
+        }
+    }
 }();
+
+/**
+ * Delete /tools/blocks and /tools/models if they exist
+ */
+function cleanTempDirectories() {
+    const blocksDir = path.join(TOOLS_DIR, '/blocks');
+    if (fs.existsSync(blocksDir)) {
+        log('info', `Deleting ${blocksDir}...`);
+        fs.rmSync(blocksDir, { recursive: true, force: true });
+    }
+
+    const modelsDir = path.join(TOOLS_DIR, '/models');
+    if (fs.existsSync(modelsDir)) {
+        log('info', `Deleting ${modelsDir}...`);
+        fs.rmSync(path.join(TOOLS_DIR, '/models'), { recursive: true, force: true });
+    }
+}
 
 function checkMinecraftInstallation() {
     const dir = getMinecraftDir();
     if (!fs.existsSync(dir)) {
-        log(LogStyle.Failure, `Could not find ${dir}`);
-        log(LogStyle.Failure, 'To use this tool you need to install Minecraft Java Edition');
+        log('fail', `Could not find ${dir}`);
+        log('fail', 'To use this tool you need to install Minecraft Java Edition');
         process.exit(1);
     } else {
-        log(LogStyle.Success, `Found Minecraft Java Edition installation at ${dir}`);
+        log('ok', `Found Minecraft Java Edition installation at ${dir}`);
     }
 }
 
-function cleanupDirectories() {
-    fs.rmSync(path.join(TOOLS_DIR, '/blocks'), { recursive: true, force: true });
-    fs.rmSync(path.join(TOOLS_DIR, '/models'), { recursive: true, force: true });
-}
 
 async function getResourcePack() {
     const resourcePacksDir = path.join(getMinecraftDir(), './resourcepacks');
     if (!fs.existsSync(resourcePacksDir)) {
-        log(LogStyle.Failure, 'Could not find .minecraft/resourcepacks\n');
+        log('fail', 'Could not find .minecraft/resourcepacks\n');
         process.exit(1);
     }
 
-    log(LogStyle.Info, 'Looking for resource packs...');
+    log('info', 'Looking for resource packs...');
     const resourcePacks = fs.readdirSync(resourcePacksDir);
-    log(LogStyle.None, `1) Vanilla`);
+    log('none', `1) Vanilla`);
     for (let i = 0; i < resourcePacks.length; ++i) {
-        log(LogStyle.None, `${i+2}) ${resourcePacks[i]}`);
+        log('none', `${i+2}) ${resourcePacks[i]}`);
     }
 
     const { packChoice } = await prompt.get({
@@ -71,7 +93,7 @@ async function getResourcePack() {
 function fetchVanillModelsAndTextures(fetchTextures: boolean) {
     const versionsDir = path.join(getMinecraftDir(), './versions');
     ASSERT(fs.existsSync(versionsDir), 'Could not find .minecraft/versions');
-    log(LogStyle.Info, '.minecraft/versions found successfully');
+    log('ok', '.minecraft/versions found successfully');
 
     const versions = fs.readdirSync(versionsDir)
         .filter((file) => fs.lstatSync(path.join(versionsDir, file)).isDirectory())
@@ -80,18 +102,18 @@ function fetchVanillModelsAndTextures(fetchTextures: boolean) {
 
     for (let i = 0; i < versions.length; ++i) {
         const versionName = versions[i].file;
-        log(LogStyle.Info, `Searching in ${versionName} for ${versionName}.jar`);
+        log('info', `Searching in ${versionName} for ${versionName}.jar`);
 
         const versionDir = path.join(versionsDir, versionName);
         const versionFiles = fs.readdirSync(versionDir);
         if (!versionFiles.includes(versionName + '.jar')) {
             continue;
         }
-        log(LogStyle.Success, `Found ${versionName}.jar successfully\n`);
+        log('ok', `Found ${versionName}.jar successfully\n`);
 
         const versionJarPath = path.join(versionDir, `${versionName}.jar`);
 
-        log(LogStyle.Info, `Upzipping ${versionName}.jar...`);
+        log('info', `Upzipping ${versionName}.jar...`);
         const zip = new AdmZip(versionJarPath);
         const zipEntries = zip.getEntries();
         zipEntries.forEach((zipEntry: any) => {
@@ -101,7 +123,7 @@ function fetchVanillModelsAndTextures(fetchTextures: boolean) {
                 zip.extractEntryTo(zipEntry.entryName, path.join(TOOLS_DIR, './models'), false, true);
             }
         });
-        log(LogStyle.Success, `Extracted textures and models successfully\n`);
+        log('ok', `Extracted textures and models successfully\n`);
         return;
     }
 }
@@ -113,22 +135,22 @@ async function fetchModelsAndTextures() {
         return;
     }
 
-    log(LogStyle.Warning, 'Non-16x16 texture packs are not supported');
+    log('warn', 'Non-16x16 texture packs are not supported');
 
     const resourcePackDir = path.join(getMinecraftDir(), './resourcepacks', resourcePack);
     if (fs.lstatSync(resourcePackDir).isDirectory()) {
-        log(LogStyle.Info, `Resource pack '${resourcePack}' is a directory`);
+        log('info', `Resource pack '${resourcePack}' is a directory`);
         const blockTexturesSrc = path.join(resourcePackDir, 'assets/minecraft/textures/block');
         const blockTexturesDst = path.join(TOOLS_DIR, './blocks');
-        log(LogStyle.Info, `Copying ${blockTexturesSrc} to ${blockTexturesDst}`);
+        log('info', `Copying ${blockTexturesSrc} to ${blockTexturesDst}`);
         copydir(blockTexturesSrc, blockTexturesDst, {
             utimes: true,
             mode: true,
             cover: true,
         });
-        log(LogStyle.Success, `Copied block textures successfully`);
+        log('ok', `Copied block textures successfully`);
     } else {
-        log(LogStyle.Info, `Resource pack '${resourcePack}' is not a directory, expecting to be a .zip`);
+        log('info', `Resource pack '${resourcePack}' is not a directory, expecting to be a .zip`);
         
         const zip = new AdmZip(resourcePackDir);
         const zipEntries = zip.getEntries();
@@ -137,34 +159,34 @@ async function fetchModelsAndTextures() {
                 zip.extractEntryTo(zipEntry.entryName, path.join(TOOLS_DIR, './blocks'), false, true);
             }
         });
-        log(LogStyle.Success, `Copied block textures successfully`);
+        log('ok', `Copied block textures successfully`);
         return;
     }
 }
 
 async function buildAtlas() {
     // Check /blocks and /models is setup correctly
-    log(LogStyle.Info, 'Checking assets are provided...');   
+    log('info', 'Checking assets are provided...');   
     
     const texturesDirSetup = isDirSetup('./blocks', 'assets/minecraft/textures/block');
     ASSERT(texturesDirSetup, '/blocks is not setup correctly');
-    log(LogStyle.Success, '/tools/blocks/ setup correctly');   
+    log('ok', '/tools/blocks/ setup correctly');   
     
     const modelsDirSetup = isDirSetup('./models', 'assets/minecraft/models/block');
     ASSERT(modelsDirSetup, '/models is not setup correctly');
-    log(LogStyle.Success, '/tools/models/ setup correctly');   
+    log('ok', '/tools/models/ setup correctly');   
 
     // Load the ignore list
-    log(LogStyle.Info, 'Loading ignore list...');
+    log('info', 'Loading ignore list...');
     let ignoreList: Array<string> = [];
     const ignoreListPath = path.join(TOOLS_DIR, './ignore-list.txt');
     if (fs.existsSync(ignoreListPath)) {
-        log(LogStyle.Success, 'Found ignore list');
+        log('ok', 'Found ignore list');
         ignoreList = fs.readFileSync(ignoreListPath, 'utf-8').replace(/\r/g, '').split('\n');
     } else {
-        log(LogStyle.Warning, 'No ignore list found, looked for ignore-list.txt');
+        log('warn', 'No ignore list found, looked for ignore-list.txt');
     }
-    log(LogStyle.Success, `${ignoreList.length} blocks found in ignore list\n`);
+    log('ok', `${ignoreList.length} blocks found in ignore list\n`);
 
     /* eslint-disable */
     enum parentModel {
@@ -191,7 +213,7 @@ async function buildAtlas() {
         colour?: RGB
     }
     
-    log(LogStyle.Info, 'Loading block models...');
+    log('info', 'Loading block models...');
     const faces = ['north', 'south', 'up', 'down', 'east', 'west'];
     const allModels: Array<Model> = [];
     const allBlockNames: Set<string> = new Set();
@@ -278,10 +300,10 @@ async function buildAtlas() {
         allBlockNames.add(modelName);
     });
     if (allModels.length === 0) {
-        log(LogStyle.Failure, 'No blocks loaded');
+        log('fail', 'No blocks loaded');
         process.exit(0);
     }
-    log(LogStyle.Success, `${allModels.length} blocks loaded\n`);
+    log('ok', `${allModels.length} blocks loaded\n`);
 
     const atlasSize = Math.ceil(Math.sqrt(usedTextures.size));
     const atlasWidth = atlasSize * 16;
@@ -303,7 +325,7 @@ async function buildAtlas() {
         },
     });
 
-    log(LogStyle.Info, `Building ${atlasName}.png...`);
+    log('info', `Building ${atlasName}.png...`);
     usedTextures.forEach((textureName) => {
         const shortName = textureName.split('/')[1]; // Eww
         const absolutePath = path.join(TOOLS_DIR, './blocks', shortName + '.png');
@@ -334,7 +356,7 @@ async function buildAtlas() {
 
 
     // Build up the output JSON
-    log(LogStyle.Info, `Building ${atlasName}.atlas...\n`);
+    log('info', `Building ${atlasName}.atlas...\n`);
     for (const model of allModels) {
         const blockColour = new RGB(0, 0, 0);
         for (const face of faces) {
@@ -352,17 +374,17 @@ async function buildAtlas() {
     }
 
 
-    log(LogStyle.Info, 'Exporting...');
+    log('info', 'Exporting...');
     const atlasDir = path.join(ATLASES_DIR, `./${atlasName}.png`);
     outputImage.save(atlasDir);
-    log(LogStyle.Success, `${atlasName}.png exported to /resources/atlases/`);
+    log('ok', `${atlasName}.png exported to /resources/atlases/`);
     const outputJSON = {
         atlasSize: atlasSize,
         blocks: allModels,
         supportedBlockNames: Array.from(allBlockNames),
     };
     fs.writeFileSync(path.join(ATLASES_DIR, `./${atlasName}.atlas`), JSON.stringify(outputJSON, null, 4));
-    log(LogStyle.Success, `${atlasName}.atlas exported to /resources/atlases/\n`);
+    log('ok', `${atlasName}.atlas exported to /resources/atlases/\n`);
 
     /* eslint-disable */
     console.log(chalk.cyanBright(chalk.inverse('DONE') + ' Now run ' + chalk.inverse(' npm start ') + ' and the new texture atlas can be used'));

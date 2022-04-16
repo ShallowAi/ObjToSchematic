@@ -1,28 +1,23 @@
 import chalk from 'chalk';
 
 /* eslint-disable */
-export enum LogStyle {
-    None = 'None',
-    Info = 'Info',
-    Warning = 'Warning',
-    Failure = 'Failure',
-    Success = 'Success'
-}
+export type LogStyle = 'none' | 'info' | 'warn' | 'fail' | 'ok';
 /* eslint-enable */
 
-const LogStyleDetails: {[style: string]: {style: chalk.Chalk, prefix: string}} = {};
-LogStyleDetails[LogStyle.Info] = {style: chalk.blue, prefix: chalk.blue.inverse('INFO')};
-LogStyleDetails[LogStyle.Warning] = {style: chalk.yellow, prefix: chalk.yellow.inverse('WARN')};
-LogStyleDetails[LogStyle.Failure] = {style: chalk.red, prefix: chalk.red.inverse('UHOH')};
-LogStyleDetails[LogStyle.Success] = {style: chalk.green, prefix: chalk.green.inverse(' OK ')};
-
 export function log(style: LogStyle, message: string) {
-    if (style === LogStyle.None) {
+    const LogStyling: Map<LogStyle, { style: chalk.Chalk, prefix: string }> = new Map([
+        ['none', { style: chalk.blue, prefix: chalk.blue.inverse('INFO') }],
+        ['warn', { style: chalk.yellow, prefix: chalk.yellow.inverse('WARN') }],
+        ['fail', { style: chalk.red, prefix: chalk.red.inverse('UHOH') }],
+        ['ok', { style: chalk.green, prefix: chalk.green.inverse(' OK ') }],
+    ]);
+
+    if (style === 'none') {
         /* eslint-disable */
         console.log(chalk.whiteBright(message));
         /* eslint-enable */
     } else {
-        const details: {style: chalk.Chalk, prefix: string} = LogStyleDetails[style];
+        const details: {style: chalk.Chalk, prefix: string} = LogStyling.get(style)!;
         /* eslint-disable */
         console.log(details.prefix + ' ' + details.style(message));
         /* eslint-enable */

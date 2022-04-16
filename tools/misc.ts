@@ -1,4 +1,4 @@
-import { log, LogStyle } from './logging';
+import { log } from './logging';
 import { RGB, TOOLS_DIR } from '../src/util';
 
 import fs from 'fs';
@@ -8,7 +8,7 @@ import prompt from 'prompt';
 
 export const ASSERT = (condition: boolean, onFailMessage: string) => {
     if (!condition) {
-        log(LogStyle.Failure, onFailMessage);
+        log('fail', onFailMessage);
         process.exit(0);
     }
 };
@@ -22,7 +22,7 @@ export function isDirSetup(relativePath: string, jarAssetDir: string) {
     } else {
         fs.mkdirSync(dir);
     }
-    log(LogStyle.Warning, `Copy the contents of .minecraft/versions/<version>/<version>.jar/${jarAssetDir} from a Minecraft game files into ${relativePath} or fetch them automatically`);
+    log('warn', `Copy the contents of .minecraft/versions/<version>/<version>.jar/${jarAssetDir} from a Minecraft game files into ${relativePath} or fetch them automatically`);
     return false;
 }
 
@@ -45,7 +45,7 @@ export function getAverageColour(image: PNG) {
 
 export async function getPermission() {
     const directory = getMinecraftDir();
-    log(LogStyle.Info, `This script requires files inside of ${directory}`);
+    log('info', `This script requires files inside of ${directory}`);
     const { permission } = await prompt.get({
         properties: {
             permission: {
