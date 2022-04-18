@@ -37,7 +37,7 @@ void async function main() {
         absoluteFilePathSave: headlessConfig.export.absoluteFilePathSave,
         exporter: headlessConfig.export.exporter === 'schematic' ? new Schematic() : new Litematic(),
     });
-    log('ok', 'Finished!');
+    log('okay', 'Finished!');
 }();
 
 interface ImportParams {

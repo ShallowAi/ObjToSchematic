@@ -1,5 +1,5 @@
-import { log } from './logging';
-import { RGB, TOOLS_DIR } from '../src/util';
+import { LOG, log, LOG_OKAY } from './logging';
+import { LOGS_DIR, RGB, TOOLS_DIR, UV } from '../src/util';
 
 import fs from 'fs';
 import path from 'path';
@@ -8,10 +8,17 @@ import prompt from 'prompt';
 
 export const ASSERT = (condition: boolean, onFailMessage: string) => {
     if (!condition) {
-        log('fail', onFailMessage);
+        log('error', onFailMessage);
         process.exit(0);
     }
 };
+
+export function setupLogsDir() {
+    if (!fs.existsSync(LOGS_DIR)) {
+        fs.mkdirSync(LOGS_DIR);
+        LOG_OKAY(`Created ${LOGS_DIR}`);
+    }
+}
 
 export function isDirSetup(relativePath: string, jarAssetDir: string) {
     const dir = path.join(TOOLS_DIR, relativePath);
@@ -43,25 +50,6 @@ export function getAverageColour(image: PNG) {
     return new RGB(r / (255 * numPixels), g / (255 * numPixels), b / (255 * numPixels));
 }
 
-export async function getPermission() {
-    const directory = getMinecraftDir();
-    log('info', `This script requires files inside of ${directory}`);
-    const { permission } = await prompt.get({
-        properties: {
-            permission: {
-                pattern: /^[YyNn]$/,
-                description: 'Do you give permission to access these files? (Y/n)',
-                message: 'Response must be Y or N',
-                required: true,
-            },
-        },
-    });
-    const responseYes = ['Y', 'y'].includes(permission as string);
-    if (!responseYes) {
-        process.exit(0);
-    }
-}
-
 export function getMinecraftDir(): string {
     switch (process.platform) {
         case 'darwin': // MacOS
@@ -71,4 +59,30 @@ export function getMinecraftDir(): string {
         default:
             return path.join(require('os').homedir(), '/.minecraft');
     }
+}
+
+
+/* eslint-disable */
+export enum EParentModel {
+    Cube = 'minecraft:block/cube',
+    CubeAll = 'minecraft:block/cube_all',
+    CubeColumn = 'minecraft:block/cube_column',
+    CubeColumnHorizontal = 'minecraft:block/cube_column_horizontal',
+    TemplateSingleFace = 'minecraft:block/template_single_face',
+    TemplateGlazedTerracotta = 'minecraft:block/template_glazed_terracotta',
+}
+/* eslint-enable */
+
+export interface Model {
+    name: string,
+    colour?: RGB,
+    faces: {
+        [face: string]: Texture
+    }
+}
+
+export interface Texture {
+    name: string,
+    texcoord?: UV,
+    colour?: RGB
 }
