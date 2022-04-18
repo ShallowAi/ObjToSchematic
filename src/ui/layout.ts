@@ -32,85 +32,85 @@ export class UI {
     public uiOrder = ['import', 'simplify', 'build', 'palette', 'export'];
     private _ui = {
         'import': {
-            label: 'Import',
+            label: '导入',
             elements: {
-                'input': new FileInputElement('Wavefront .obj file', 'obj'),
+                'input': new FileInputElement('Wavefront .obj 文件', 'obj'),
             },
             elementsOrder: ['input'],
-            submitButton: new ButtonElement('Load mesh', () => {
+            submitButton: new ButtonElement('导入 Mesh', () => {
                 this._appContext.do(EAction.Import);
             }),
             output: new OutputElement(),
         },
         'simplify': {
-            label: 'Simplify',
+            label: '简化',
             elements: {
-                'ratio': new SliderElement('Ratio', 0.0, 1.0, 2, 0.5),
+                'ratio': new SliderElement('比例', 0.0, 1.0, 2, 0.5),
             },
             elementsOrder: ['ratio'],
-            submitButton: new ButtonElement('Simplify mesh', () => {
+            submitButton: new ButtonElement('简化 Mesh', () => {
                 this._appContext.do(EAction.Simplify);
             }),
             output: new OutputElement(),
         },
         'build': {
-            label: 'Build',
+            label: '构建',
             elements: {
-                'height': new SliderElement('Desired height', 3, 320, 0, 80),
-                'voxeliser': new ComboBoxElement('Algorithm', [
-                    { id: 'bvhraybased', displayText: 'BVH Ray-based' },
-                    { id: 'normalcorrectedraybased', displayText: 'NCRB' },
-                    { id: 'raybased', displayText: 'Ray-based (legacy)' },
+                'height': new SliderElement('设计高度 Desired height', 3, 320, 0, 80),
+                'voxeliser': new ComboBoxElement('算法 Algorithm', [
+                    { id: 'bvhraybased', displayText: '基于层次包围盒的光线追踪 BVH Ray-based' },
+                    { id: 'normalcorrectedraybased', displayText: '普通矫正光线追踪 NCRB' },
+                    { id: 'raybased', displayText: '光线追踪 Ray-based (旧的)' },
                 ]),
-                'ambientOcclusion': new ComboBoxElement('Ambient occlusion', [
-                    { id: 'on', displayText: 'On (recommended)' },
-                    { id: 'off', displayText: 'Off (faster)' },
+                'ambientOcclusion': new ComboBoxElement('环境光遮蔽 Ambient occlusion', [
+                    { id: 'on', displayText: '开 (推荐)' },
+                    { id: 'off', displayText: '关 (快)' },
                 ]),
-                'multisampleColouring': new ComboBoxElement('Multisample colouring', [
-                    { id: 'on', displayText: 'On (recommended)' },
-                    { id: 'off', displayText: 'Off (faster)' },
+                'multisampleColouring': new ComboBoxElement('多重采样 Multisample colouring', [
+                    { id: 'on', displayText: '开 (推荐)' },
+                    { id: 'off', displayText: '关 (快)' },
                 ]),
-                'textureFiltering': new ComboBoxElement('Texture filtering', [
-                    { id: 'linear', displayText: 'Linear (recommended)' },
-                    { id: 'nearest', displayText: 'Nearest (faster)' },
+                'textureFiltering': new ComboBoxElement('纹理过滤 Texture filtering', [
+                    { id: 'linear', displayText: '线性 Linear (推荐)' },
+                    { id: 'nearest', displayText: '近似 Nearest (快)' },
                 ]),
             },
             elementsOrder: ['height', 'voxeliser', 'ambientOcclusion', 'multisampleColouring', 'textureFiltering'],
-            submitButton: new ButtonElement('Voxelise mesh', () => {
+            submitButton: new ButtonElement('像素化 Mesh', () => {
                 this._appContext.do(EAction.Voxelise);
             }),
             output: new OutputElement(),
         },
         'palette': {
-            label: 'Palette',
+            label: '调色',
             elements: {
-                'textureAtlas': new ComboBoxElement('Texture atlas', this._getTextureAtlases()),
-                'blockPalette': new ComboBoxElement('Block palette', this._getBlockPalettes()),
-                'dithering': new ComboBoxElement('Dithering', [
-                    { id: 'on', displayText: 'On (recommended)' },
-                    { id: 'off', displayText: 'Off' },
+                'textureAtlas': new ComboBoxElement('纹理图集 Texture atlas', this._getTextureAtlases()),
+                'blockPalette': new ComboBoxElement('方块状态 Block palette', this._getBlockPalettes()),
+                'dithering': new ComboBoxElement('色阶强化 Dithering', [
+                    { id: 'on', displayText: '开 (推荐)' },
+                    { id: 'off', displayText: '关' },
                 ]),
-                'colourSpace': new ComboBoxElement('Colour space', [
-                    { id: 'rgb', displayText: 'RGB (faster)' },
-                    { id: 'lab', displayText: 'LAB (recommended, slow)' },
+                'colourSpace': new ComboBoxElement('色彩空间 Colour space', [
+                    { id: 'rgb', displayText: 'RGB (快)' },
+                    { id: 'lab', displayText: 'LAB (推荐, 慢)' },
                 ]),
             },
             elementsOrder: ['textureAtlas', 'blockPalette', 'dithering', 'colourSpace'],
-            submitButton: new ButtonElement('Assign blocks', () => {
+            submitButton: new ButtonElement('赋予方块 Assign blocks', () => {
                 this._appContext.do(EAction.Palette);
             }),
             output: new OutputElement(),
         },
         'export': {
-            label: 'Export',
+            label: '导出',
             elements: {
-                'export': new ComboBoxElement('File format', [
+                'export': new ComboBoxElement('文件格式', [
                     { id: 'litematic', displayText: 'Litematic' },
                     { id: 'schematic', displayText: 'Schematic' },
                 ]),
             },
             elementsOrder: ['export'],
-            submitButton: new ButtonElement('Export structure', () => {
+            submitButton: new ButtonElement('导出 结构文件', () => {
                 this._appContext.do(EAction.Export);
             }),
             output: new OutputElement(),

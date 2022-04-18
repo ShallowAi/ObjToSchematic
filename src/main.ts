@@ -56,11 +56,11 @@ function createWindow() {
         slashes: true,
     }));
 
-    const baseTitle = 'ObjToSchematic – Convert 3D models into Minecraft builds';
+    const baseTitle = 'ObjToSchematic – 将3D模型转换为Minecraft版本';
     try {
         const branchName: Buffer = require('child_process').execSync('git rev-parse --abbrev-ref HEAD').toString().replace('\n', '');
         const commitHash: (string | Buffer) = require('child_process').execSync('git rev-parse --short HEAD').toString().replace('\n', '');
-        mainWindow.setTitle(`${baseTitle} (git//${branchName.toString()}++${commitHash.toString().trim()})`);
+        mainWindow.setTitle(`${baseTitle} (git//${branchName.toString()}++${commitHash.toString().trim()}) Lifmc 内部版本 禁止外传`);
     } catch (e: any) {
         mainWindow.setTitle(`${baseTitle} (release//v0.5.0)`);
     }

@@ -245,7 +245,7 @@ export class ObjImporter extends IImporter {
         this._parseOBJ(filePath);
 
         if (this._mtlLibs.length === 0) {
-            StatusHandler.Get.add('warning', 'Could not find associated .mtl file');
+            StatusHandler.Get.add('warning', '未找到关联的 .mtl 文件');
         }
         for (let i = 0; i < this._mtlLibs.length; ++i) {
             const mtlLib = this._mtlLibs[i];
@@ -264,7 +264,7 @@ export class ObjImporter extends IImporter {
 
     private _parseOBJ(path: string) {
         if (!fs.existsSync(path)) {
-            throw new AppError(`Could not find ${path}`);
+            throw new AppError(`无法找到 ${path}`);
         }
         const fileContents = fs.readFileSync(path, 'utf8');
         if (fileContents.includes('�')) {
@@ -308,7 +308,7 @@ export class ObjImporter extends IImporter {
     private _parseMTL() {
         for (const mtlLib of this._mtlLibs) {
             if (!fs.existsSync(mtlLib)) {
-                throw new AppError(`Could not find ${mtlLib}`);
+                throw new AppError(`无法找到 ${mtlLib}`);
             }
             const fileContents = fs.readFileSync(mtlLib, 'utf8');
     

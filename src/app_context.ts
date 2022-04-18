@@ -122,7 +122,7 @@ export class AppContext {
 
         let returnStyle: OutputStyle = 'success';
         if (StatusHandler.Get.hasStatusMessages('warning')) {
-            message.addHeading('There were some warnings');
+            message.addHeading('警告! 出现了一些小问题');
             message.add(...StatusHandler.Get.getStatusMessages('warning'));
             returnStyle = 'warning';
         }
@@ -202,8 +202,8 @@ export class AppContext {
         const exporter = (exportFormat === 'schematic') ? new Schematic() : new Litematic();
 
         let filePath = remote.dialog.showSaveDialogSync({
-            title: 'Save structure',
-            buttonLabel: 'Save',
+            title: '导出结构文件',
+            buttonLabel: '保存',
             filters: [exporter.getFormatFilter()],
         });
 

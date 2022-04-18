@@ -96,13 +96,13 @@ export class Mesh {
         if (this._tris.length >= 100_000) {
             StatusHandler.Get.add(
                 'warning',
-                `The imported mesh has ${this._tris.length.toLocaleString()} triangles, consider simplifying it in a DDC such as Blender`,
+                `导入的 Mesh 有 ${this._tris.length.toLocaleString()} 个三角形, 建议先在 DDC 工具如 Blender 中先简化它.`,
             );
         }
 
         StatusHandler.Get.add(
             'info',
-            `${this._vertices.length.toLocaleString()} vertices, ${this._tris.length.toLocaleString()} triangles`,
+            `${this._vertices.length.toLocaleString()} 顶点, ${this._tris.length.toLocaleString()} 三角形`,
         );
 
         // Give warning if normals are not defined
@@ -171,7 +171,7 @@ export class Mesh {
                 if (!fs.existsSync(material.path)) {
                     StatusHandler.Get.add(
                         'warning',
-                        `Could not find ${material.path}`,
+                        `无法找到 ${material.path}`,
                     );
                     LOG_WARN(`Could not find ${material.path} for material ${materialName}, changing to solid-white material`);
                     this._materials[materialName] = {

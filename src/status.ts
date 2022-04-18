@@ -42,34 +42,34 @@ export class StatusHandler {
     public getDefaultSuccessMessage(action: EAction): string {
         switch (action) {
             case EAction.Import:
-                return 'Successfully loaded mesh';
+                return '导入 Mesh 成功';
             case EAction.Simplify:
-                return 'Successfully simplified mesh';
+                return '简化 Mesh 成功';
             case EAction.Voxelise:
-                return 'Successfully voxelised mesh';
+                return '像素化 Mesh 成功';
             case EAction.Palette:
-                return 'Successfully assigned blocks';
+                return '赋予方块 成功';
             case EAction.Export:
-                return 'Successfully exported mesh';
+                return '导出 Mesh 成功';
             default:
-                return 'Successfully performed action';
+                return '操作成功完成';
         }
     }
 
     public getDefaultFailureMessage(action: EAction): string {
         switch (action) {
             case EAction.Import:
-                return 'Failed to load mesh';
+                return '导入 Mesh 失败';
             case EAction.Simplify:
-                return 'Failed to simplify mesh';
+                return '简化 Mesh 失败';
             case EAction.Voxelise:
-                return 'Failed to voxelise mesh';
+                return '像素化 Mesh 失败';
             case EAction.Palette:
-                return 'Failed to assign blocks';
+                return '赋予方块 失败';
             case EAction.Export:
-                return 'Failed to export mesh';
+                return '导出 Mesh 失败';
             default:
-                return 'Failed to perform action';
+                return '操作失败';
         }
     }
 }

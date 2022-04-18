@@ -32,10 +32,10 @@ export class FileInputElement extends LabelledElement<string> {
             }
 
             const files = remote.dialog.showOpenDialogSync({
-                title: 'Load file',
-                buttonLabel: 'Load',
+                title: '导入文件',
+                buttonLabel: '导入',
                 filters: [{
-                    name: 'Waveform obj file',
+                    name: 'Waveform obj 文件',
                     extensions: [`${this._fileExtension}`],
                 }],
             });
