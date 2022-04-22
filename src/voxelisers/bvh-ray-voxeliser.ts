@@ -13,7 +13,7 @@ const bvhtree = require('bvh-tree');
  */
 export class BVHRayVoxeliser extends IVoxeliser {
     protected override _voxelise(mesh: Mesh, voxelMeshParams: VoxelMeshParams): VoxelMesh {
-        const voxelMesh = new VoxelMesh(mesh, voxelMeshParams);
+        const voxelMesh = new VoxelMesh();
         const scale = (voxelMeshParams.desiredHeight - 1) / Mesh.desiredHeight;
         const offset = (voxelMeshParams.desiredHeight % 2 === 0) ? new Vector3(0.0, 0.5, 0.0) : new Vector3(0.0, 0.0, 0.0);
         const useMesh = mesh.copy(); // TODO: Voxelise without copying mesh, too expensive for dense meshes
@@ -38,7 +38,7 @@ export class BVHRayVoxeliser extends IVoxeliser {
         bounds.min.floor();
         bounds.max.ceil();
 
-        const planeDims = Vector3.sub(bounds.max, bounds.min).addScalar(1);
+        const planeDims = Vector3.sub(bounds.max, bounds.min).add(1);
         const numRays = (planeDims.x * planeDims.y) + (planeDims.x * planeDims.z) + (planeDims.y * planeDims.z);
         const rays = new Array<Ray>(numRays);
         let rayIndex = 0;

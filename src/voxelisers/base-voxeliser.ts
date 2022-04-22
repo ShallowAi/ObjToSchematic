@@ -12,8 +12,13 @@ export abstract class IVoxeliser {
 
         StatusHandler.Get.add('info', `像素 Mesh 共有 ${voxelMesh.getVoxelCount().toLocaleString()} 像素`);
 
+<<<<<<< HEAD
         const dim = voxelMesh.getBounds().getDimensions().addScalar(1);
         StatusHandler.Get.add('info', `维度 ${dim.x.toLocaleString()}x${dim.y.toLocaleString()}x${dim.z.toLocaleString()} 体素`);
+=======
+        const dim = voxelMesh.getBounds().getDimensions().add(1);
+        StatusHandler.Get.add('info', `Dimensions are ${dim.x.toLocaleString()}x${dim.y.toLocaleString()}x${dim.z.toLocaleString()} voxels`);
+>>>>>>> 9d760b1b8448bb991a78ee4370d3ae7bf6ac10c4
 
         return voxelMesh;
     }

@@ -6,7 +6,6 @@ import { Triangle, UVTriangle } from '../triangle';
 import { Bounds, RGB, UV } from '../util';
 import { Vector3 } from '../vector';
 import { IVoxeliser } from './base-voxeliser';
-import { DebugGeometryTemplates } from '../geometry';
 
 /**
  * This voxeliser works by projecting rays onto each triangle
@@ -22,7 +21,7 @@ export class NormalCorrectedRayVoxeliser extends IVoxeliser {
 
     protected override _voxelise(mesh: Mesh, voxelMeshParams: VoxelMeshParams): VoxelMesh {
         this._mesh = mesh;
-        this._voxelMesh = new VoxelMesh(mesh, voxelMeshParams);
+        this._voxelMesh = new VoxelMesh();
         this._voxelMeshParams = voxelMeshParams;
 
         this._scale = (voxelMeshParams.desiredHeight) / Mesh.desiredHeight;
@@ -54,14 +53,7 @@ export class NormalCorrectedRayVoxeliser extends IVoxeliser {
         
         rayList.forEach((ray) => {
             const intersection = rayIntersectTriangle(ray, triangle.v0, triangle.v1, triangle.v2);
-            if (intersection) {
-                const intersectionWorld = Vector3.divScalar(intersection, this._scale);
-                this._voxelMesh!.debugBuffer.add(DebugGeometryTemplates.cross(
-                    intersectionWorld,
-                    0.1,
-                    RGB.magenta,
-                ));
-                
+            if (intersection) {                
                 // Move transition away from normal
                 const norm = normals.v0.normalise();
                 intersection.sub(Vector3.mulScalar(norm, 0.5));
@@ -82,17 +74,11 @@ export class NormalCorrectedRayVoxeliser extends IVoxeliser {
                 }
                 voxelPosition.round();
 
-                this._voxelMesh!.debugBuffer.add(DebugGeometryTemplates.arrow(
-                    intersectionWorld,
-                    Vector3.divScalar(voxelPosition, this._scale),
-                    RGB.magenta,
-                ));
-
                 let voxelColour: RGB;
                 if (this._voxelMeshParams!.useMultisampleColouring) {
                     const samples: RGB[] = [];
                     for (let i = 0; i < AppConfig.MULTISAMPLE_COUNT; ++i) {
-                        const samplePosition = Vector3.add(voxelPosition, Vector3.random().addScalar(-0.5));
+                        const samplePosition = Vector3.add(voxelPosition, Vector3.random().add(-0.5));
                         samples.push(this.__getVoxelColour(triangle, materialName, samplePosition));
                     }
                     voxelColour = RGB.averageFrom(samples);

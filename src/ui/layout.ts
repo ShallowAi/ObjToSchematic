@@ -29,7 +29,7 @@ export interface ToolbarGroup {
 }
 
 export class UI {
-    public uiOrder = ['import', 'simplify', 'build', 'palette', 'export'];
+    public uiOrder = ['import', 'simplify', 'build', 'assign', 'export'];
     private _ui = {
         'import': {
             label: '导入',
@@ -81,8 +81,13 @@ export class UI {
             }),
             output: new OutputElement(),
         },
+<<<<<<< HEAD
         'palette': {
             label: '调色',
+=======
+        'assign': {
+            label: 'Assign',
+>>>>>>> 9d760b1b8448bb991a78ee4370d3ae7bf6ac10c4
             elements: {
                 'textureAtlas': new ComboBoxElement('纹理图集 Texture atlas', this._getTextureAtlases()),
                 'blockPalette': new ComboBoxElement('方块状态 Block palette', this._getBlockPalettes()),
@@ -96,8 +101,13 @@ export class UI {
                 ]),
             },
             elementsOrder: ['textureAtlas', 'blockPalette', 'dithering', 'colourSpace'],
+<<<<<<< HEAD
             submitButton: new ButtonElement('赋予方块 Assign blocks', () => {
                 this._appContext.do(EAction.Palette);
+=======
+            submitButton: new ButtonElement('Assign blocks', () => {
+                this._appContext.do(EAction.Assign);
+>>>>>>> 9d760b1b8448bb991a78ee4370d3ae7bf6ac10c4
             }),
             output: new OutputElement(),
         },
