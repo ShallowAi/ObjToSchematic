@@ -60,9 +60,9 @@ function createWindow() {
     try {
         const branchName: Buffer = require('child_process').execSync('git rev-parse --abbrev-ref HEAD').toString().replace('\n', '');
         const commitHash: (string | Buffer) = require('child_process').execSync('git rev-parse --short HEAD').toString().replace('\n', '');
-        mainWindow.setTitle(`${baseTitle} (git//${branchName.toString()}++${commitHash.toString().trim()}) Lifmc 内部版本 禁止外传`);
+        mainWindow.setTitle(`${baseTitle} (git//${branchName.toString()}++${commitHash.toString().trim()}) Lifmc 帧木得工作组 内部版本 禁止外传 @ShallowAi`);
     } catch (e: any) {
-        mainWindow.setTitle(`${baseTitle} (release//v0.5.0)`);
+        mainWindow.setTitle(`${baseTitle} (release//v0.5.1) Lifmc 帧木得工作组 内部版本 禁止外传 @ShallowA`);
     }
     
     // Open the DevTools.
